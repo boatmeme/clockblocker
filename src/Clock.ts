@@ -1,1 +1,5 @@
-export default class Clock {}
+export default class Clock {
+  get realTimeInMillis() {
+    return Date.now();
+  }
+}
