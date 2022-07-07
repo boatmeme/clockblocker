@@ -2,13 +2,16 @@ import { Clock } from '../src/index';
 
 describe(`Clock class`, () => {
   const currentDate = new Date();
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(currentDate);
   });
+
   afterEach(() => {
     jest.useRealTimers();
   });
+
   describe(`constructor`, () => {
     it('exists', () => {
       const clock = new Clock();
