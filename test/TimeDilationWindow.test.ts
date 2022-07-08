@@ -1,6 +1,6 @@
-import { TimeDilation } from '../src/index';
+import { TimeDilationWindow } from '../src/index';
 
-describe(`TimeDilation class`, () => {
+describe(`TimeDilationWindow class`, () => {
   const currentDate = new Date(0);
 
   beforeEach(() => {
@@ -16,8 +16,8 @@ describe(`TimeDilation class`, () => {
     it('exists', () => {
       const start = new Date(Date.now() + 1000);
       const end = new Date(start.getTime() + 1000);
-      const timewarp = new TimeDilation(start, end);
-      expect(timewarp).toBeInstanceOf(TimeDilation);
+      const timewarp = new TimeDilationWindow(start, end);
+      expect(timewarp).toBeInstanceOf(TimeDilationWindow);
     });
   });
 
@@ -26,7 +26,7 @@ describe(`TimeDilation class`, () => {
       it('returns the real time, before window begins', () => {
         const start = new Date(Date.now() + 1000);
         const end = new Date(start.getTime() + 1000);
-        const timewarp = new TimeDilation(start, end);
+        const timewarp = new TimeDilationWindow(start, end);
 
         jest.advanceTimersByTime(500);
 
@@ -37,7 +37,7 @@ describe(`TimeDilation class`, () => {
       it('returns the real time, after window begin + realDurationInMillis', () => {
         const start = new Date(Date.now() + 1000);
         const end = new Date(start.getTime() + 1000);
-        const timewarp = new TimeDilation(start, end, 2000);
+        const timewarp = new TimeDilationWindow(start, end, 2000);
 
         jest.advanceTimersByTime(500);
 
@@ -62,7 +62,7 @@ describe(`TimeDilation class`, () => {
       it('returns a dilated time, with realTimeInMillis default', () => {
         const start = new Date(Date.now() + 1000);
         const end = new Date(start.getTime() + 1000);
-        const timewarp = new TimeDilation(start, end);
+        const timewarp = new TimeDilationWindow(start, end);
 
         jest.advanceTimersByTime(1500);
 
@@ -73,7 +73,7 @@ describe(`TimeDilation class`, () => {
       it('returns a dilated time', () => {
         const start = new Date(Date.now() + 1000);
         const end = new Date(start.getTime() + 1000);
-        const timewarp = new TimeDilation(start, end, 2000);
+        const timewarp = new TimeDilationWindow(start, end, 2000);
 
         jest.advanceTimersByTime(1500);
 
