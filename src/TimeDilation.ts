@@ -1,9 +1,15 @@
 export default class TimeDilation {
   start: Date;
   end: Date;
-  constructor(start: Date, end: Date) {
+  realDurationInMillis: number;
+  constructor(start: Date, end: Date, realDurationInMillis: number = end.getTime() - start.getTime()) {
     this.start = start;
     this.end = end;
+    this.realDurationInMillis = realDurationInMillis;
+  }
+
+  get dilationFactor() {
+    return (this.end.getTime() - this.start.getTime()) / this.realDurationInMillis;
   }
 
   get startInMillis() {
@@ -14,9 +20,13 @@ export default class TimeDilation {
     return this.end.getTime();
   }
 
+  get actualEndInMillis() {
+    return this.start.getTime() + this.realDurationInMillis;
+  }
+
   get relativeTimeInMillis() {
     const now = Date.now();
-    if (now <= this.startInMillis || now >= this.endInMillis) return now;
-    return now - 100;
+    if (now <= this.startInMillis || now >= this.actualEndInMillis) return now;
+    return (now - this.start.getTime()) * this.dilationFactor + this.start.getTime();
   }
 }
