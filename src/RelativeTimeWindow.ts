@@ -1,9 +1,14 @@
+import ClockTime from './ClockTime';
 import TimeWindow from './TimeWindow';
 export default abstract class RelativeTimeWindow extends TimeWindow {
-  protected realDurationInMillis: number;
-  constructor(start: Date, end: Date, realDurationInMillis: number = end.getTime() - start.getTime()) {
+  protected referenceDurationInMillis: number;
+  constructor(
+    start: ClockTime,
+    end: ClockTime,
+    referenceDurationInMillis: number = end.forTodayInMillis() - start.forTodayInMillis(),
+  ) {
     super(start, end);
-    this.realDurationInMillis = realDurationInMillis;
+    this.referenceDurationInMillis = referenceDurationInMillis;
   }
 
   abstract get warpFactor(): number;

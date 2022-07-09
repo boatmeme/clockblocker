@@ -1,4 +1,4 @@
-import { TimeDilationWindow } from '../src/index';
+import { TimeDilationWindow, ClockTime } from '../src/index';
 
 describe(`TimeDilationWindow class`, () => {
   const currentDate = new Date(0);
@@ -14,8 +14,16 @@ describe(`TimeDilationWindow class`, () => {
 
   describe(`constructor`, () => {
     it('exists', () => {
-      const start = new Date(Date.now() + 1000);
-      const end = new Date(start.getTime() + 1000);
+      const start = new ClockTime({
+        hour: 0,
+        minute: 0,
+        second: (Date.now() + 1000) / 1000,
+      });
+      const end = new ClockTime({
+        hour: 0,
+        minute: 0,
+        second: (start.forTodayInMillis() + 1000) / 1000,
+      });
       const timewarp = new TimeDilationWindow(start, end);
       expect(timewarp).toBeInstanceOf(TimeDilationWindow);
     });
@@ -24,8 +32,16 @@ describe(`TimeDilationWindow class`, () => {
   describe(`getRelativeTimeInMillis`, () => {
     describe(`outside dilation window`, () => {
       it('returns the real time, before window begins', () => {
-        const start = new Date(Date.now() + 1000);
-        const end = new Date(start.getTime() + 1000);
+        const start = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (Date.now() + 1000) / 1000,
+        });
+        const end = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (start.forTodayInMillis() + 1000) / 1000,
+        });
         const timewarp = new TimeDilationWindow(start, end);
 
         jest.advanceTimersByTime(500);
@@ -35,8 +51,16 @@ describe(`TimeDilationWindow class`, () => {
         expect(fraudTime).toEqual(Date.now());
       });
       it('returns the real time, after window begin + realDurationInMillis', () => {
-        const start = new Date(Date.now() + 1000);
-        const end = new Date(start.getTime() + 1000);
+        const start = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (Date.now() + 1000) / 1000,
+        });
+        const end = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (start.forTodayInMillis() + 1000) / 1000,
+        });
         const timewarp = new TimeDilationWindow(start, end, 2000);
 
         jest.advanceTimersByTime(500);
@@ -60,8 +84,16 @@ describe(`TimeDilationWindow class`, () => {
     });
     describe(`inside dilation window`, () => {
       it('returns a dilated time, with realTimeInMillis default', () => {
-        const start = new Date(Date.now() + 1000);
-        const end = new Date(start.getTime() + 1000);
+        const start = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (Date.now() + 1000) / 1000,
+        });
+        const end = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (start.forTodayInMillis() + 1000) / 1000,
+        });
         const timewarp = new TimeDilationWindow(start, end);
 
         jest.advanceTimersByTime(1500);
@@ -71,8 +103,16 @@ describe(`TimeDilationWindow class`, () => {
         expect(fraudTime).toEqual(Date.now());
       });
       it('returns a dilated time', () => {
-        const start = new Date(Date.now() + 1000);
-        const end = new Date(start.getTime() + 1000);
+        const start = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (Date.now() + 1000) / 1000,
+        });
+        const end = new ClockTime({
+          hour: 0,
+          minute: 0,
+          second: (start.forTodayInMillis() + 1000) / 1000,
+        });
         const timewarp = new TimeDilationWindow(start, end, 2000);
 
         jest.advanceTimersByTime(1500);
