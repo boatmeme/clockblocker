@@ -34,6 +34,12 @@ describe(`Clock class`, () => {
   });
   describe(`getRelativeTime`, () => {
     it('returns the relative time', () => {
+      /*
+        0000 - 2000 - normal time
+        2000 - 3000 - half-time
+        3000 - 4000 - double-time
+        4000 - onward - normal time
+        */
       const clock = new Clock();
       const relativeNow = clock.relativeTimeInMillis;
       expect(typeof relativeNow).toBe('number');
