@@ -1,6 +1,7 @@
-import sharedConfig from './jest.config';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const sharedConfig = require('./jest.config');
 
-export default {
+module.exports = {
   ...sharedConfig,
 
   // Indicates whether the coverage information should be collected while executing the test
