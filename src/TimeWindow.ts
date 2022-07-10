@@ -1,4 +1,4 @@
-import ClockTime from './ClockTime';
+import ClockTime, { ClockTimeComparison } from './ClockTime';
 export default class TimeWindow {
   private start: ClockTime;
   private end: ClockTime;
@@ -13,6 +13,9 @@ export default class TimeWindow {
   }
 
   get windowEndInMillis() {
+    if (this.end.compare(this.start) === ClockTimeComparison.EARLIER) {
+      return this.end.forTomorrowInMillis(this._timeZone);
+    }
     return this.end.forTodayInMillis(this._timeZone);
   }
 
