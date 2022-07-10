@@ -19,7 +19,7 @@ export default class ClockTime {
     this._clockTime = Temporal.PlainTime.from(opts);
   }
 
-  private forPlainDateInMillis(date: Temporal.PlainDate, ianaTimeZoneId = `UTC`) {
+  private forPlainDateInMillis(date: Temporal.PlainDate, ianaTimeZoneId: string) {
     const wallClockTime = date.toPlainDateTime(this._clockTime);
     const localClockTime = wallClockTime.toZonedDateTime(ianaTimeZoneId);
     return localClockTime.toInstant().epochMilliseconds;
