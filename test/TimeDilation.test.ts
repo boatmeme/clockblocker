@@ -1,4 +1,5 @@
-import { TimeDilationWindow, ClockTime } from '../src/index';
+import { TimeDilation, ClockTime } from '../src/index';
+import TimeWindow from '../src/TimeWindow';
 
 describe(`TimeDilationWindow class`, () => {
   const currentDate = new Date(0);
@@ -24,8 +25,8 @@ describe(`TimeDilationWindow class`, () => {
         minute: 0,
         second: (start.forTodayInMillis() + 1000) / 1000,
       });
-      const timewarp = new TimeDilationWindow(start, end);
-      expect(timewarp).toBeInstanceOf(TimeDilationWindow);
+      const timewarp = new TimeDilation(new TimeWindow(start, end));
+      expect(timewarp).toBeInstanceOf(TimeDilation);
     });
   });
 
@@ -42,7 +43,7 @@ describe(`TimeDilationWindow class`, () => {
           minute: 0,
           second: (start.forTodayInMillis() + 1000) / 1000,
         });
-        const timewarp = new TimeDilationWindow(start, end);
+        const timewarp = new TimeDilation(new TimeWindow(start, end));
 
         jest.advanceTimersByTime(500);
 
@@ -61,7 +62,7 @@ describe(`TimeDilationWindow class`, () => {
           minute: 0,
           second: (start.forTodayInMillis() + 1000) / 1000,
         });
-        const timewarp = new TimeDilationWindow(start, end, 2000);
+        const timewarp = new TimeDilation(new TimeWindow(start, end), { milliseconds: 2000 });
 
         jest.advanceTimersByTime(500);
 
@@ -94,7 +95,7 @@ describe(`TimeDilationWindow class`, () => {
           minute: 0,
           second: (start.forTodayInMillis() + 1000) / 1000,
         });
-        const timewarp = new TimeDilationWindow(start, end);
+        const timewarp = new TimeDilation(new TimeWindow(start, end));
 
         jest.advanceTimersByTime(1500);
 
@@ -113,7 +114,7 @@ describe(`TimeDilationWindow class`, () => {
           minute: 0,
           second: (start.forTodayInMillis() + 1000) / 1000,
         });
-        const timewarp = new TimeDilationWindow(start, end, 2000);
+        const timewarp = new TimeDilation(new TimeWindow(start, end), { seconds: 2 });
 
         jest.advanceTimersByTime(1500);
 

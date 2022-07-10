@@ -1,5 +1,5 @@
 import Clock from './Clock';
 import ClockTime from './ClockTime';
-import TimeDilationWindow from './TimeDilationWindow';
+import TimeDilation from './TimeDilation';
 
-export { Clock, ClockTime, TimeDilationWindow };
+export { Clock, ClockTime, TimeDilation };
