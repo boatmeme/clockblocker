@@ -26,8 +26,8 @@ export default abstract class RelativeTimeDistortion {
     length: number = this.timeWindow.windowEndInMillis - this.timeWindow.windowStartInMillis,
   ) {
     const millisInWindow = length - offset;
-    return millisInWindow * this.warpFactor;
+    return this.distortTime(millisInWindow, offset);
   }
 
-  abstract get warpFactor(): number;
+  protected abstract distortTime(numberOfMilliseconds: number, offset?: number): number;
 }
