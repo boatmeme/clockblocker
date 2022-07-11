@@ -18,10 +18,8 @@ export default class Clock {
     const now = this.referenceTimeInMillis;
     return (this._offset = this._timeDistortions.reduce((offset, distortion) => {
       const window = distortion.getTimeWindow();
-      const nowComparison = window.compareWithinWindow(now);
-      if (nowComparison === TimeWindowComparison.EARLIER) return offset;
-      const lastCheckComparison = window.compareWithinWindow(this._lastCheck);
-      if (lastCheckComparison === TimeWindowComparison.LATER) return offset;
+      if (window.compareWithinWindow(now) === TimeWindowComparison.EARLIER) return offset;
+      if (window.compareWithinWindow(this._lastCheck) === TimeWindowComparison.LATER) return offset;
       const timeSinceLastCheck = now - this._lastCheck;
       const windowOffset = Math.max(0, timeSinceLastCheck - window.windowStartInMillis);
       const windowLength = Math.min(
