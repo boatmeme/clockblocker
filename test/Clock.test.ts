@@ -1,4 +1,5 @@
-import { Clock } from '../src/index';
+import { Clock, ClockTime, TimeCompression, TimeDilation } from '../src/index';
+import TimeWindow from '../src/TimeWindow';
 
 describe(`Clock class`, () => {
   const currentDate = new Date(0);
@@ -40,7 +41,14 @@ describe(`Clock class`, () => {
         3000 - 4000 - double-time
         4000 - onward - normal time
         */
-      const clock = new Clock();
+      const clock = new Clock([
+        new TimeDilation(new TimeWindow(new ClockTime({ second: 2 }), new ClockTime({ second: 3 })), {
+          seconds: 2,
+        }),
+        new TimeCompression(new TimeWindow(new ClockTime({ second: 3 }), new ClockTime({ second: 4 })), {
+          milliseconds: 500,
+        }),
+      ]);
       const relativeNow = clock.relativeTimeInMillis;
       expect(typeof relativeNow).toBe('number');
       expect(relativeNow).toEqual(currentDate.getTime());
