@@ -1,6 +1,6 @@
 import Clock from './Clock';
 import ClockTime from './ClockTime';
-import TimeDilation from './TimeDilation';
-import TimeCompression from './TimeCompression';
+import ConstantTimeDilation from './ConstantTimeDilation';
+import ConstantTimeCompression from './ConstantTimeCompression';
 
-export { Clock, ClockTime, TimeDilation, TimeCompression };
+export { Clock, ClockTime, ConstantTimeCompression, ConstantTimeDilation };

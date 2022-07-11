@@ -1,4 +1,4 @@
-import { TimeDilation, ClockTime } from '../src/index';
+import { ConstantTimeDilation, ClockTime } from '../src/index';
 import TimeWindow from '../src/TimeWindow';
 
 describe.skip(`TimeDilationWindow class`, () => {
@@ -25,8 +25,8 @@ describe.skip(`TimeDilationWindow class`, () => {
         minute: 0,
         second: (start.forTodayInMillis() + 1000) / 1000,
       });
-      const timewarp = new TimeDilation(new TimeWindow(start, end));
-      expect(timewarp).toBeInstanceOf(TimeDilation);
+      const timewarp = new ConstantTimeDilation(new TimeWindow(start, end));
+      expect(timewarp).toBeInstanceOf(ConstantTimeDilation);
     });
   });
   /*

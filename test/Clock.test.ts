@@ -1,4 +1,4 @@
-import { Clock, ClockTime, TimeCompression, TimeDilation } from '../src/index';
+import { Clock, ClockTime, ConstantTimeCompression, ConstantTimeDilation } from '../src/index';
 import TimeWindow from '../src/TimeWindow';
 
 describe(`Clock class`, () => {
@@ -42,10 +42,10 @@ describe(`Clock class`, () => {
         4000 - onward - normal time
         */
       const clock = new Clock([
-        new TimeDilation(new TimeWindow(new ClockTime({ second: 2 }), new ClockTime({ second: 3 })), {
+        new ConstantTimeDilation(new TimeWindow(new ClockTime({ second: 2 }), new ClockTime({ second: 3 })), {
           seconds: 2,
         }),
-        new TimeCompression(new TimeWindow(new ClockTime({ second: 3 }), new ClockTime({ second: 4 })), {
+        new ConstantTimeCompression(new TimeWindow(new ClockTime({ second: 3 }), new ClockTime({ second: 4 })), {
           milliseconds: 500,
         }),
       ]);
