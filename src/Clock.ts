@@ -1,4 +1,5 @@
 import RelativeTimeDistortion from './RelativeTimeDistortion';
+import { TimeWindowComparison } from './TimeWindow';
 
 export default class Clock {
   private _offset = 0;
@@ -16,7 +17,18 @@ export default class Clock {
   get offset() {
     const now = this.referenceTimeInMillis;
     return (this._offset = this._timeDistortions.reduce((offset, distortion) => {
-      return offset + distortion.getOffset(now, this._lastCheck);
+      const window = distortion.getTimeWindow();
+      const nowComparison = window.compareWithinWindow(now);
+      if (nowComparison === TimeWindowComparison.EARLIER) return offset;
+      const lastCheckComparison = window.compareWithinWindow(this._lastCheck);
+      if (lastCheckComparison === TimeWindowComparison.LATER) return offset;
+      const timeSinceLastCheck = now - this._lastCheck;
+      const windowOffset = Math.max(0, timeSinceLastCheck - window.windowStartInMillis);
+      const windowLength = Math.min(
+        window.durationInMillis,
+        Math.min(now - window.windowStartInMillis, timeSinceLastCheck, window.windowEndInMillis - this._lastCheck),
+      );
+      return offset + distortion.getElapsedTimeInMillis(windowOffset, windowLength);
     }, this._offset));
   }
 

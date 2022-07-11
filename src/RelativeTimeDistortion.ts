@@ -17,13 +17,16 @@ export default abstract class RelativeTimeDistortion {
     }).milliseconds;
   }
 
-  getOffset(start: number, lastSeen: number) {
-    if (start >= this.timeWindow.windowStartInMillis && lastSeen < this.timeWindow.windowEndInMillis) {
-      const millisInWindow =
-        Math.min(start, this.timeWindow.windowEndInMillis) - Math.max(this.timeWindow.windowStartInMillis, lastSeen);
-      return millisInWindow * this.warpFactor;
-    }
-    return 0;
+  getTimeWindow() {
+    return this.timeWindow.clone();
+  }
+
+  getElapsedTimeInMillis(
+    offset = 0,
+    length: number = this.timeWindow.windowEndInMillis - this.timeWindow.windowStartInMillis,
+  ) {
+    const millisInWindow = length - offset;
+    return millisInWindow * this.warpFactor;
   }
 
   abstract get warpFactor(): number;
