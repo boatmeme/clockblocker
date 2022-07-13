@@ -30,9 +30,11 @@
   "author": "Jonathan Griggs <jonathan.griggs@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@js-temporal/polyfill": "^0.4.1"
+    "@js-temporal/polyfill": "^0.4.1",
+    "gaussian": "^1.2.0"
   },
   "devDependencies": {
+    "@types/gaussian": "^1.2.0",
     "@types/jest": "^28.1.4",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
