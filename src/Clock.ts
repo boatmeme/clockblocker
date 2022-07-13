@@ -21,7 +21,7 @@ export default class Clock {
       if (window.compareWithinWindow(now) === TimeWindowComparison.EARLIER) return offset;
       if (window.compareWithinWindow(this._lastCheck) === TimeWindowComparison.LATER) return offset;
       const timeSinceLastCheck = now - this._lastCheck;
-      const windowOffset = Math.max(0, timeSinceLastCheck - window.windowStartInMillis);
+      const windowOffset = Math.max(0, this._lastCheck - window.windowStartInMillis);
       const windowLength = Math.min(
         window.durationInMillis,
         Math.min(now - window.windowStartInMillis, timeSinceLastCheck, window.windowEndInMillis - this._lastCheck),
