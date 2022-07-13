@@ -2,12 +2,11 @@ import AbstractGaussianTimeDistortion from './AbstractGaussianTimeDistortion';
 export default class GaussianTimeDilation extends AbstractGaussianTimeDistortion {
   distortTime(numberOfMilliseconds: number, offset: number): number {
     const duration = this.timeWindow.durationInMillis;
-    const scale = this.timeWindow.durationInMillis / this.referenceDurationInMillis;
-    const elapsedTime = [...Array(numberOfMilliseconds).keys()].reduce((acc, v) => {
-      const val = 10 * ((v + offset) / duration) - 5;
-      //console.log(val, this._distribution.cdf(val));
-      return acc + this._distribution.cdf(val) * scale;
-    }, 0);
-    return -elapsedTime;
+    const scale = duration / this.referenceDurationInMillis;
+    const maxVal = 10 * ((numberOfMilliseconds + offset) / duration) - 5;
+    const offsetVal = 10 * (offset / duration) - 5;
+    const maxTime = this._distribution.cdf(maxVal);
+    const minTime = this._distribution.cdf(offsetVal);
+    return -((maxTime - minTime) * scale) * 1000;
   }
 }
