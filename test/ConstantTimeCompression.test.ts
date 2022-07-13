@@ -1,7 +1,7 @@
-import { ConstantTimeDilation, ClockTime } from '../src/index';
+import { ConstantTimeCompression, ClockTime } from '../src/index';
 import TimeWindow from '../src/TimeWindow';
 
-describe(`ConstantTimeDilation class`, () => {
+describe(`ConstantTimeCompression class`, () => {
   const start = new ClockTime({
     hour: 0,
     minute: 0,
@@ -16,26 +16,26 @@ describe(`ConstantTimeDilation class`, () => {
 
   describe(`constructor`, () => {
     it('exists', () => {
-      const timewarp = new ConstantTimeDilation(timeWindow);
-      expect(timewarp).toBeInstanceOf(ConstantTimeDilation);
+      const timewarp = new ConstantTimeCompression(timeWindow);
+      expect(timewarp).toBeInstanceOf(ConstantTimeCompression);
     });
   });
 
   describe(`distortTime`, () => {
     describe('w/ defaults', () => {
-      it(`effectively, a pause`, () => {
-        const timewarp = new ConstantTimeDilation(timeWindow);
+      it(`effectively, a doubling`, () => {
+        const timewarp = new ConstantTimeCompression(timeWindow);
         const result = timewarp.distortTime(500);
         expect(typeof result).toBe('number');
-        expect(result).toEqual(-500);
+        expect(result).toEqual(500);
       });
     });
     describe('with `relativeDuration` specified', () => {
-      it(`performs a constant dilation, based on the ratio of real-to-relative duration`, () => {
-        const timewarp = new ConstantTimeDilation(timeWindow, { seconds: 2 });
+      it(`performs a constant compression, based on the ratio of real-to-relative duration`, () => {
+        const timewarp = new ConstantTimeCompression(timeWindow, { milliseconds: 500 });
         const result = timewarp.distortTime(500);
         expect(typeof result).toBe('number');
-        expect(result).toEqual(-250);
+        expect(result).toEqual(250);
       });
     });
   });
