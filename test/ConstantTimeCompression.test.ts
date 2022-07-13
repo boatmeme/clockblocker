@@ -1,5 +1,4 @@
-import { ConstantTimeCompression, ClockTime } from '../src/index';
-import TimeWindow from '../src/TimeWindow';
+import { ConstantTimeCompression, ClockTime, TimeWindow } from '../src/index';
 
 describe(`ConstantTimeCompression class`, () => {
   const start = new ClockTime({

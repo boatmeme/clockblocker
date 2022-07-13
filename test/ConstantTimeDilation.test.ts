@@ -1,5 +1,4 @@
-import { ConstantTimeDilation, ClockTime } from '../src/index';
-import TimeWindow from '../src/TimeWindow';
+import { ConstantTimeDilation, ClockTime, TimeWindow } from '../src/index';
 
 describe(`ConstantTimeDilation class`, () => {
   const start = new ClockTime({

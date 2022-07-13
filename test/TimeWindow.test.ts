@@ -1,5 +1,4 @@
-import { ClockTime } from '../src/index';
-import TimeWindow from '../src/TimeWindow';
+import { ClockTime, TimeWindow } from '../src/index';
 
 describe(`TimeWindow class`, () => {
   const currentDate = new Date(0);

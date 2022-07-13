@@ -1,6 +1,5 @@
-import { ConstantTimeDilation, ClockTime } from '../src/index';
+import { ConstantTimeDilation, ClockTime, TimeWindow } from '../src/index';
 import RelativeTimeDistortion from '../src/RelativeTimeDistortion';
-import TimeWindow from '../src/TimeWindow';
 
 describe(`RelativeTimeDistortion class`, () => {
   const start = new ClockTime({
