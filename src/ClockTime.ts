@@ -37,6 +37,10 @@ export default class ClockTime {
     return this.forPlainDateInMillis(date, ianaTimeZoneId);
   }
 
+  add(duration: Temporal.DurationLike) {
+    return new ClockTime(this._clockTime.add(duration));
+  }
+
   compare(b: ClockTime): ClockTimeComparison {
     return Temporal.PlainTime.compare(this._clockTime, b._clockTime);
   }

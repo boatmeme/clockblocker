@@ -1,21 +1,18 @@
-import { ConstantTimeDilation, ClockTime, TimeWindow } from '../src/index';
+import { ConstantTimeDilation } from '../src/index';
 
 describe(`ConstantTimeDilation class`, () => {
-  const start = new ClockTime({
+  const start = {
     hour: 0,
     minute: 0,
     second: 1,
-  });
-  const end = new ClockTime({
-    hour: 0,
-    minute: 0,
-    second: 2,
-  });
-  const timeWindow = new TimeWindow(start, end);
+  };
+  const end = {
+    seconds: 2,
+  };
 
   describe(`constructor`, () => {
     it('exists', () => {
-      const timewarp = new ConstantTimeDilation(timeWindow);
+      const timewarp = new ConstantTimeDilation(start, end);
       expect(timewarp).toBeInstanceOf(ConstantTimeDilation);
     });
   });
@@ -23,7 +20,7 @@ describe(`ConstantTimeDilation class`, () => {
   describe(`distortTime`, () => {
     describe('w/ defaults', () => {
       it(`effectively, a pause`, () => {
-        const timewarp = new ConstantTimeDilation(timeWindow);
+        const timewarp = new ConstantTimeDilation(start, end);
         const result = timewarp.distortTime(500);
         expect(typeof result).toBe('number');
         expect(result).toEqual(-500);
@@ -31,7 +28,7 @@ describe(`ConstantTimeDilation class`, () => {
     });
     describe('with `relativeDuration` specified', () => {
       it(`performs a constant dilation, based on the ratio of real-to-relative duration`, () => {
-        const timewarp = new ConstantTimeDilation(timeWindow, { seconds: 2 });
+        const timewarp = new ConstantTimeDilation(start, { seconds: 1 }, end);
         const result = timewarp.distortTime(500);
         expect(typeof result).toBe('number');
         expect(result).toEqual(-250);
