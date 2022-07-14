@@ -1,10 +1,10 @@
 import { Temporal } from '@js-temporal/polyfill';
 
 export interface ClockTimeDescriptor {
-  hour?: number | undefined;
-  minute?: number | undefined;
-  second?: number | undefined;
-  millisecond?: number | undefined;
+  hour?: number;
+  minute?: number;
+  second?: number;
+  millisecond?: number;
 }
 
 export enum ClockTimeComparison {

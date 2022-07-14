@@ -147,10 +147,10 @@ The most important thing is to understand the three paramters passed to an insta
 
 ```
 export interface ClockTimeDescriptor {
-  hour?: number | undefined;
-  minute?: number | undefined;
-  second?: number | undefined;
-  millisecond?: number | undefined;
+  hour?: number;
+  minute?: number;
+  second?: number;
+  millisecond?: number;
 }
 ```
 
