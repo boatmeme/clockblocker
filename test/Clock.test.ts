@@ -1,5 +1,4 @@
-import { Clock, ClockTime, ConstantTimeCompression, ConstantTimeDilation } from '../src/index';
-import TimeWindow from '../src/TimeWindow';
+import { Clock, ConstantTimeCompression, ConstantTimeDilation } from '../src/index';
 
 describe(`Clock class`, () => {
   const currentDate = new Date(0);
@@ -34,6 +33,51 @@ describe(`Clock class`, () => {
     });
   });
   describe(`getRelativeTime`, () => {
+    it('documentation example', () => {
+      const clock = new Clock([
+        new ConstantTimeDilation(
+          { hour: 1 }, // start at 1am (system),
+          {
+            hours: 3, // Relative duration: 3 hours will appear to pass
+          },
+          {
+            hours: 6, // Reference duration: It will take 6 hours, real-time for the 3 hour `dilationWindow` to appear to pass
+          },
+        ),
+        new ConstantTimeCompression(
+          { hour: 7 }, // start at 7 am,
+          { hours: 3 }, // Relative time: It will appear that 3 hours have passed
+          {
+            minutes: 90, // Reference time: but, in reality, only 90 minutes have passed
+          },
+        ),
+      ]);
+
+      const hour = 1000 * 60 * 60;
+      jest.advanceTimersByTime(hour);
+      expect(clock.relativeTimeInMillis).toEqual(hour);
+      expect(clock.referenceTimeInMillis).toEqual(hour);
+
+      jest.advanceTimersByTime(hour);
+
+      expect(clock.relativeTimeInMillis).toEqual(hour * 1.5);
+      expect(clock.referenceTimeInMillis).toEqual(hour * 2);
+
+      jest.advanceTimersByTime(hour);
+
+      expect(clock.relativeTimeInMillis).toEqual(hour * 2);
+      expect(clock.referenceTimeInMillis).toEqual(hour * 3);
+
+      jest.advanceTimersByTime(hour);
+
+      expect(clock.relativeTimeInMillis).toEqual(hour * 2.5);
+      expect(clock.referenceTimeInMillis).toEqual(hour * 4);
+
+      jest.advanceTimersByTime(hour);
+
+      expect(clock.relativeTimeInMillis).toEqual(hour * 3);
+      expect(clock.referenceTimeInMillis).toEqual(hour * 5);
+    });
     it('returns the relative time', () => {
       /*
         0000 - 2000 - normal time
@@ -42,12 +86,20 @@ describe(`Clock class`, () => {
         4000 - onward - normal time
         */
       const clock = new Clock([
-        new ConstantTimeDilation(new TimeWindow(new ClockTime({ second: 2 }), new ClockTime({ second: 3 })), {
-          seconds: 2,
-        }),
-        new ConstantTimeCompression(new TimeWindow(new ClockTime({ second: 3 }), new ClockTime({ second: 4 })), {
-          milliseconds: 500,
-        }),
+        new ConstantTimeDilation(
+          { second: 2 },
+          { milliseconds: 500 },
+          {
+            seconds: 1,
+          },
+        ),
+        new ConstantTimeCompression(
+          { second: 3 },
+          {
+            seconds: 2,
+          },
+          { seconds: 1 },
+        ),
       ]);
       const relativeNow = clock.relativeTimeInMillis;
       expect(typeof relativeNow).toBe('number');

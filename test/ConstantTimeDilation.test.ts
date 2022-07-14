@@ -1,129 +1,38 @@
-import { ConstantTimeDilation, ClockTime } from '../src/index';
-import TimeWindow from '../src/TimeWindow';
+import { ConstantTimeDilation } from '../src/index';
 
-describe.skip(`TimeDilationWindow class`, () => {
-  const currentDate = new Date(0);
-
-  beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(currentDate);
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
+describe(`ConstantTimeDilation class`, () => {
+  const start = {
+    hour: 0,
+    minute: 0,
+    second: 1,
+  };
+  const end = {
+    seconds: 2,
+  };
 
   describe(`constructor`, () => {
     it('exists', () => {
-      const start = new ClockTime({
-        hour: 0,
-        minute: 0,
-        second: (Date.now() + 1000) / 1000,
-      });
-      const end = new ClockTime({
-        hour: 0,
-        minute: 0,
-        second: (start.forTodayInMillis() + 1000) / 1000,
-      });
-      const timewarp = new ConstantTimeDilation(new TimeWindow(start, end));
+      const timewarp = new ConstantTimeDilation(start, end);
       expect(timewarp).toBeInstanceOf(ConstantTimeDilation);
     });
   });
-  /*
-  describe(`getRelativeTimeInMillis`, () => {
-    describe(`outside dilation window`, () => {
-      it('returns the real time, before window begins', () => {
-        const start = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (Date.now() + 1000) / 1000,
-        });
-        const end = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (start.forTodayInMillis() + 1000) / 1000,
-        });
-        const timewarp = new TimeDilation(new TimeWindow(start, end));
 
-        jest.advanceTimersByTime(500);
-
-        const fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toEqual(Date.now());
-      });
-      it('returns the real time, after window begin + realDurationInMillis', () => {
-        const start = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (Date.now() + 1000) / 1000,
-        });
-        const end = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (start.forTodayInMillis() + 1000) / 1000,
-        });
-        const timewarp = new TimeDilation(new TimeWindow(start, end), { milliseconds: 2000 });
-
-        jest.advanceTimersByTime(500);
-
-        let fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toEqual(Date.now());
-
-        jest.advanceTimersByTime(501);
-
-        fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toBeLessThan(Date.now());
-
-        jest.advanceTimersByTime(2000);
-
-        fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toEqual(Date.now());
+  describe(`distortTime`, () => {
+    describe('w/ defaults', () => {
+      it(`effectively, a pause`, () => {
+        const timewarp = new ConstantTimeDilation(start, end);
+        const result = timewarp.distortTime(500);
+        expect(typeof result).toBe('number');
+        expect(result).toEqual(-500);
       });
     });
-    describe(`inside dilation window`, () => {
-      it('returns a dilated time, with realTimeInMillis default', () => {
-        const start = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (Date.now() + 1000) / 1000,
-        });
-        const end = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (start.forTodayInMillis() + 1000) / 1000,
-        });
-        const timewarp = new TimeDilation(new TimeWindow(start, end));
-
-        jest.advanceTimersByTime(1500);
-
-        const fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toEqual(Date.now());
-      });
-      it('returns a dilated time', () => {
-        const start = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (Date.now() + 1000) / 1000,
-        });
-        const end = new ClockTime({
-          hour: 0,
-          minute: 0,
-          second: (start.forTodayInMillis() + 1000) / 1000,
-        });
-        const timewarp = new TimeDilation(new TimeWindow(start, end), { seconds: 2 });
-
-        jest.advanceTimersByTime(1500);
-
-        const fraudTime = timewarp.relativeTimeInMillis;
-        expect(typeof fraudTime).toBe('number');
-        expect(fraudTime).toBeLessThan(Date.now());
-        expect(fraudTime).toEqual(1250);
+    describe('with `relativeDuration` specified', () => {
+      it(`performs a constant dilation, based on the ratio of real-to-relative duration`, () => {
+        const timewarp = new ConstantTimeDilation(start, { seconds: 1 }, end);
+        const result = timewarp.distortTime(500);
+        expect(typeof result).toBe('number');
+        expect(result).toEqual(-250);
       });
     });
   });
-  */
 });

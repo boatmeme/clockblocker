@@ -1,10 +1,10 @@
 import { Temporal } from '@js-temporal/polyfill';
 
 export interface ClockTimeDescriptor {
-  hour?: number | undefined;
-  minute?: number | undefined;
-  second?: number | undefined;
-  millisecond?: number | undefined;
+  hour?: number;
+  minute?: number;
+  second?: number;
+  millisecond?: number;
 }
 
 export enum ClockTimeComparison {
@@ -35,6 +35,10 @@ export default class ClockTime {
     const tz = Temporal.TimeZone.from(ianaTimeZoneId);
     const date = Temporal.Now.plainDateISO(tz).add({ days: 1 });
     return this.forPlainDateInMillis(date, ianaTimeZoneId);
+  }
+
+  add(duration: Temporal.DurationLike) {
+    return new ClockTime(this._clockTime.add(duration));
   }
 
   compare(b: ClockTime): ClockTimeComparison {

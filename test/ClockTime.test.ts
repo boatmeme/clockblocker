@@ -1,5 +1,4 @@
-import { ClockTimeComparison } from '../src/ClockTime';
-import { ClockTime } from '../src/index';
+import ClockTime, { ClockTimeComparison } from '../src/ClockTime';
 
 describe(`ClockTime class`, () => {
   const currentDate = new Date(0);

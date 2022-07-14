@@ -1,4 +1,4 @@
-import { ClockTime } from '../src/index';
+import ClockTime from '../src/ClockTime';
 import TimeWindow from '../src/TimeWindow';
 
 describe(`TimeWindow class`, () => {
