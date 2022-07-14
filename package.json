@@ -1,7 +1,7 @@
 {
   "name": "clockblocker",
   "version": "0.0.1",
-  "description": "A Typescript library for time manipulation, or for building deceitful clocks",
+  "description": "A Typescript library for warping the very fabric of space-time, or for building deceitful clocks.",
   "main": "dist/index.js",
   "types": "dist/types/index.d.js",
   "scripts": {
