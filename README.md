@@ -46,18 +46,16 @@ import { Clock, ConstantTimeCompression, ConstantTimeDilation } from 'clockblock
 const timeDilation = new ConstantTimeDilation(
   { hour: 1 }, // start at 1am, reference ("real") time
   { hours: 3 }, // Relative Time: By the time the "fake" time reads 4am...
-  {
-    hours: 6, // Reference Time: 6 hours of "real" time will have passed
-});
+  { hours: 6 }, // Reference Time: 6 hours of "real" time will have passed
+);
 
 // Fake clock will read: 4:00am, real clock: 7:00am
 
 const timeCompression = new ConstantTimeCompression(
   { hour: 7 }, // start at 7am reference ("real") time
   { hours: 6 }, // Relative Time: In the time the "fake" time shows the passage of 6 hours 
-  {
-    hours: 3, // Reference Time: Only 3 hours, real time will have elapsed
-}),
+  { hours: 3}, // Reference Time: Only 3 hours, real time will have elapsed 
+),
 
 // So, by the time 10:00am (reference) rolls-around, the clock is back to normal 1-to-1 time.
 // Fake clock will read: 10:00am, real clock: 10:00am
