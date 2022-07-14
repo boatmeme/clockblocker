@@ -1,5 +1,5 @@
-import { GaussianTimeDilation, ClockTime, Clock, GaussianTimeCompression } from '../src/index';
-import gaussian, { Gaussian } from 'gaussian';
+import { GaussianTimeDilation, Clock, GaussianTimeCompression } from '../src/index';
+import gaussian from 'gaussian';
 import TimeWindow from '../src/TimeWindow';
 
 describe(`GaussianTimeDilation class`, () => {
@@ -16,17 +16,15 @@ describe(`GaussianTimeDilation class`, () => {
 
   describe(`constructor`, () => {
     it('exists', () => {
-      const start = new ClockTime({
+      const start = {
         hour: 0,
         minute: 0,
-        second: (Date.now() + 1000) / 1000,
-      });
-      const end = new ClockTime({
-        hour: 0,
-        minute: 0,
-        second: (start.forTodayInMillis() + 1000) / 1000,
-      });
-      const timewarp = new GaussianTimeDilation(new TimeWindow(start, end), undefined, 1);
+        second: 1,
+      };
+      const end = {
+        seconds: 2,
+      };
+      const timewarp = new GaussianTimeDilation(start, end, end, 1);
       expect(timewarp).toBeInstanceOf(GaussianTimeDilation);
     });
   });
@@ -42,17 +40,19 @@ describe(`GaussianTimeDilation class`, () => {
     it('returns elapsed millis according to a gaussian distribution (variance = 1)', () => {
       const clock = new Clock([
         new GaussianTimeDilation(
-          new TimeWindow(new ClockTime({ second: 2 }), new ClockTime({ second: 3 })),
+          { second: 2 },
           {
             seconds: 2,
           },
+          { seconds: 1 },
           5.0,
         ),
         new GaussianTimeCompression(
-          new TimeWindow(new ClockTime({ second: 3 }), new ClockTime({ second: 4 })),
+          { second: 3 },
           {
             milliseconds: 500,
           },
+          { seconds: 1 },
           5.0,
         ),
       ]);
