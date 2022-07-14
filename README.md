@@ -1,5 +1,4 @@
-# (๑ᵕ⌓ᵕ̤) clockblocker
-[![Node.js CI](https://github.com/boatmeme/clockblocker/actions/workflows/node.js.yml/badge.svg)](https://github.com/boatmeme/clockblocker/actions/workflows/node.js.yml)
+# (๑ᵕ⌓ᵕ̤) clockblocker [![npm version](https://badge.fury.io/js/clockblocker.svg)](https://badge.fury.io/js/clockblocker) [![Node.js CI](https://github.com/boatmeme/clockblocker/actions/workflows/node.js.yml/badge.svg)](https://github.com/boatmeme/clockblocker/actions/workflows/node.js.yml)
 
 A Typescript library for warping the very fabric of space-time, or for building deceitful clocks.
 
