@@ -43,4 +43,19 @@ describe(`Clock invariants`, () => {
       expect(fineResult).toEqual(12 * hour); // the distortions cancel out by noon
     });
   });
+
+  describe(`order independence`, () => {
+    it(`produces the same relative time regardless of the order of the distortions`, () => {
+      const [dilation, compression] = buildDistortions();
+      const forward = new Clock([dilation, compression]);
+      const reversed = new Clock([compression, dilation]);
+
+      // Walk both clocks through the same hourly checkpoints; their offsets are summed, so
+      // the array order must not matter at any point in time.
+      for (let h = 1; h <= 12; h++) {
+        jest.setSystemTime(h * hour);
+        expect(reversed.relativeTimeInMillis).toEqual(forward.relativeTimeInMillis);
+      }
+    });
+  });
 });
