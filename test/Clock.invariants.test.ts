@@ -58,4 +58,31 @@ describe(`Clock invariants`, () => {
       }
     });
   });
+
+  describe(`round-trip net-zero`, () => {
+    it(`returns to perfect sync after a dilation is exactly compensated by a compression`, () => {
+      // Lose 3 hours over 1am-7am, then claw exactly 3 hours back over 7am-10am.
+      const clock = new Clock(buildDistortions());
+
+      // The clock runs behind for the whole excursion, peaking at -3h when the dilation ends
+      // at 7am, and the lag profile is symmetric: it reads -1.5h both halfway into the
+      // dilation (4am) and halfway back through the compression (8.5am).
+      jest.setSystemTime(4 * hour);
+      expect(clock.relativeTimeInMillis - 4 * hour).toEqual(-1.5 * hour);
+
+      jest.setSystemTime(7 * hour);
+      expect(clock.relativeTimeInMillis - 7 * hour).toEqual(-3 * hour);
+
+      jest.setSystemTime(8.5 * hour);
+      expect(clock.relativeTimeInMillis - 8.5 * hour).toEqual(-1.5 * hour);
+
+      // By 10am the windows are done and the offset must be back to exactly zero.
+      jest.setSystemTime(10 * hour);
+      expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis);
+
+      // ...and it stays in sync afterward, with no residual drift.
+      jest.setSystemTime(20 * hour);
+      expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis);
+    });
+  });
 });
