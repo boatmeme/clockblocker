@@ -32,6 +32,31 @@ describe(`Clock class`, () => {
       expect(end - start).toEqual(1000);
     });
   });
+  describe(`offset`, () => {
+    it('is idempotent when read repeatedly without time advancing', () => {
+      const hour = 1000 * 60 * 60;
+      const clock = new Clock([new ConstantTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 })]);
+
+      jest.setSystemTime(4 * hour); // partway through the dilation window
+
+      // Each read consumes the elapsed slice, so subsequent reads at the same instant must
+      // not keep accumulating the same interval.
+      const first = clock.offset;
+      expect(clock.offset).toEqual(first);
+      expect(clock.offset).toEqual(first);
+      expect(first).toEqual(-1.5 * hour);
+    });
+
+    it('does not double-count when read via offset and then relativeTimeInMillis', () => {
+      const hour = 1000 * 60 * 60;
+      const clock = new Clock([new ConstantTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 })]);
+
+      jest.setSystemTime(4 * hour);
+
+      const offset = clock.offset;
+      expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis + offset);
+    });
+  });
   describe(`getRelativeTime`, () => {
     it('documentation example (matches the hour-by-hour table in the README)', () => {
       // System time starts at the epoch (1970-01-01T00:00:00Z), i.e. midnight UTC, so the

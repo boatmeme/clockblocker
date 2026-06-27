@@ -16,7 +16,7 @@ export default class Clock {
 
   get offset() {
     const now = this.referenceTimeInMillis;
-    return (this._offset = this._timeDistortions.reduce((offset, distortion) => {
+    this._offset = this._timeDistortions.reduce((offset, distortion) => {
       const window = distortion.getTimeWindow();
       if (window.compareWithinWindow(now) === TimeWindowComparison.EARLIER) return offset;
       if (window.compareWithinWindow(this._lastCheck) === TimeWindowComparison.LATER) return offset;
@@ -27,16 +27,14 @@ export default class Clock {
         Math.min(now - window.windowStartInMillis, timeSinceLastCheck, window.windowEndInMillis - this._lastCheck),
       );
       return offset + distortion.getElapsedTimeInMillis(windowOffset, windowLength);
-    }, this._offset));
-  }
-
-  private markLastCheck() {
-    this._lastCheck = this.referenceTimeInMillis;
+    }, this._offset);
+    // Consume the elapsed slice so that reading `offset` (or `relativeTimeInMillis`) again
+    // without time advancing does not accumulate the same interval twice.
+    this._lastCheck = now;
+    return this._offset;
   }
 
   get relativeTimeInMillis() {
-    const relativeTime = this.referenceTimeInMillis + this.offset;
-    this.markLastCheck();
-    return relativeTime;
+    return this.referenceTimeInMillis + this.offset;
   }
 }
