@@ -29,6 +29,9 @@
   ],
   "author": "Jonathan Griggs <jonathan.griggs@gmail.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@js-temporal/polyfill": "^0.4.1"
   },
