@@ -1,5 +1,5 @@
 import ClockTime from '../src/ClockTime';
-import TimeWindow from '../src/TimeWindow';
+import TimeWindow, { TimeWindowComparison } from '../src/TimeWindow';
 
 describe(`TimeWindow class`, () => {
   const currentDate = new Date(0);
@@ -69,6 +69,26 @@ describe(`TimeWindow class`, () => {
     it(`equals the wall-clock span on a day with no transition`, () => {
       jest.setSystemTime(Date.UTC(2025, 5, 1, 12)); // 2025-06-01: no DST change
       expect(window(1, 4).durationInMillis).toEqual(3 * hour);
+    });
+  });
+
+  // The window is a half-open interval [start, end): the start instant is inside, the end
+  // instant is outside. Clock relies on this for adjacent, non-overlapping windows to hand
+  // off cleanly, so pin the exact boundary behavior.
+  describe(`compareWithinWindow`, () => {
+    const hour = 60 * 60 * 1000;
+    const window = new TimeWindow(new ClockTime({ hour: 12 }), new ClockTime({ hour: 13 }));
+    const windowStart = 12 * hour; // resolved against the epoch day (UTC) from beforeEach
+    const windowEnd = 13 * hour;
+
+    it(`treats the start of the window as inclusive`, () => {
+      expect(window.compareWithinWindow(windowStart - 1)).toEqual(TimeWindowComparison.EARLIER);
+      expect(window.compareWithinWindow(windowStart)).toEqual(TimeWindowComparison.WITHIN);
+    });
+
+    it(`treats the end of the window as exclusive`, () => {
+      expect(window.compareWithinWindow(windowEnd - 1)).toEqual(TimeWindowComparison.WITHIN);
+      expect(window.compareWithinWindow(windowEnd)).toEqual(TimeWindowComparison.LATER);
     });
   });
 });
