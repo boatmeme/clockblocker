@@ -37,6 +37,8 @@ Let's be honest, you'll only be able to get away with this once a year, on Chris
 npm install clockblocker
 ```
 
+Requires Node.js >= 18.
+
 ## Usage
 
 ```
@@ -54,7 +56,7 @@ const timeCompression = new ConstantTimeCompression(
   { hour: 7 }, // start at 7am reference ("real") time
   { hours: 6 }, // Relative Time: In the time the "fake" time shows the passage of 6 hours 
   { hours: 3}, // Reference Time: Only 3 hours, real time will have elapsed 
-),
+);
 
 // So, by the time 10:00am (reference) rolls-around, the clock is back to normal 1-to-1 time.
 // Fake clock will read: 10:00am, real clock: 10:00am

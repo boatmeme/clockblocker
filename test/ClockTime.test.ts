@@ -57,7 +57,31 @@ describe(`ClockTime class`, () => {
     });
   });
 
+  describe(`add`, () => {
+    it(`advances the wall-clock time by the duration`, () => {
+      const result = new ClockTime({ hour: 12 }).add({ hours: 1, minutes: 30 });
+      expect(result.compare(new ClockTime({ hour: 13, minute: 30 }))).toEqual(ClockTimeComparison.EQUIVALENT);
+    });
+
+    it(`wraps past midnight, since a wall-clock time carries no date`, () => {
+      const result = new ClockTime({ hour: 23 }).add({ hours: 2 });
+      expect(result.compare(new ClockTime({ hour: 1 }))).toEqual(ClockTimeComparison.EQUIVALENT);
+      expect(result.forTodayInMillis()).toEqual(60 * 60 * 1000); // 01:00, not 25:00
+    });
+
+    it(`preserves millisecond precision`, () => {
+      const result = new ClockTime({ hour: 0, millisecond: 250 }).add({ milliseconds: 1500 });
+      expect(result.forTodayInMillis()).toEqual(1750); // 250ms + 1500ms past midnight
+    });
+  });
+
   describe(`forTodayInMillis`, () => {
+    describe(`sub-second precision`, () => {
+      it(`resolves seconds and milliseconds`, () => {
+        const clockTime = new ClockTime({ second: 1, millisecond: 500 });
+        expect(clockTime.forTodayInMillis()).toEqual(1500);
+      });
+    });
     describe(`no params`, () => {
       it(`returns today's occurrence, in UTC, of the wall-clock time, in epoch millis'`, () => {
         const hour = 12;
