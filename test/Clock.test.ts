@@ -57,6 +57,40 @@ describe(`Clock class`, () => {
       expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis + offset);
     });
   });
+  // KNOWN LIMITATION: a distortion's window is described purely as a wall-clock time-of-day
+  // and is always resolved against the *current* calendar date (ClockTime.forTodayInMillis).
+  // A window that wraps past midnight (end-of-day < start-of-day) is therefore only active on
+  // the calendar day it starts; once the date rolls over, its start time is recomputed as
+  // tonight's occurrence (in the future) and the in-progress distortion silently drops out.
+  // These tests pin that behavior so the gap is visible and a future date/timezone-aware
+  // implementation has a regression target. The midnight scenario is exactly the README's
+  // overnight use case, so this matters in practice.
+  describe(`midnight-wrapping window (known limitation)`, () => {
+    const hour = 1000 * 60 * 60;
+    const minute = 1000 * 60;
+    // 11pm start, runs at half speed for a 4h reference window => ends 3am the next day.
+    const buildClock = () => new Clock([new ConstantTimeDilation({ hour: 23 }, { hours: 2 }, { hours: 4 })]);
+
+    it('distorts correctly before midnight, on the day the window starts', () => {
+      const clock = buildClock();
+      jest.setSystemTime(23 * hour); // 11:00pm, window start
+      clock.relativeTimeInMillis; // prime lastCheck at the window start
+
+      jest.setSystemTime(23 * hour + 30 * minute); // 11:30pm, 30 real minutes into the window
+      // Half speed => only 15 fake minutes have passed; the clock is 15 minutes behind.
+      expect(clock.relativeTimeInMillis - clock.referenceTimeInMillis).toEqual(-15 * minute);
+    });
+
+    it('does NOT distort after midnight, even though 00:30 is inside the 23:00->03:00 window', () => {
+      jest.setSystemTime(24 * hour + 30 * minute); // 12:30am the following day
+      const clock = buildClock();
+
+      // The window *should* still be active here, but because its start is re-resolved to the
+      // current (already-past-midnight) date, it is treated as not-yet-started and no
+      // distortion is applied. Documents the bug rather than endorsing it.
+      expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis);
+    });
+  });
   describe(`getRelativeTime`, () => {
     it('documentation example (matches the hour-by-hour table in the README)', () => {
       // System time starts at the epoch (1970-01-01T00:00:00Z), i.e. midnight UTC, so the
