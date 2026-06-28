@@ -1,23 +1,15 @@
-import { Temporal } from '@js-temporal/polyfill';
 import ClockTime, { ClockTimeDescriptor } from './ClockTime';
 import TimeWindow from './TimeWindow';
 import ElapsedWindow from './ElapsedWindow';
 import { DistortionWindow } from './DistortionWindow';
+import { Duration, durationToMillis } from './duration';
 
-export interface Duration {
-  hours?: number;
-  minutes?: number;
-  seconds?: number;
-  milliseconds?: number;
-}
+export type { Duration };
 
 // Where a distortion is anchored. A bare ClockTimeDescriptor means a wall-clock time-of-day
 // (the original, default behavior); `{ elapsed }` anchors the window to the run's own t=0,
 // measured in reference (real) time since the Clock was constructed.
 export type DistortionAnchor = ClockTimeDescriptor | { elapsed: Duration };
-
-const durationToMillis = (duration: Duration) =>
-  Temporal.Duration.from(duration).round({ largestUnit: 'millisecond' }).milliseconds;
 
 const isElapsedAnchor = (anchor: DistortionAnchor): anchor is { elapsed: Duration } => `elapsed` in anchor;
 

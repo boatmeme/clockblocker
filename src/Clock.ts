@@ -18,6 +18,12 @@ export default class Clock {
     return Date.now();
   }
 
+  // The run's t=0: the reference instant the clock was constructed at, which every elapsed
+  // window is anchored to. Stopwatch/Countdown read this to measure warped time since start.
+  get runStartInMillis() {
+    return this._runAnchor;
+  }
+
   get offset() {
     const now = this.referenceTimeInMillis;
     this._offset = this._timeDistortions.reduce((offset, distortion) => {

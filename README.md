@@ -218,7 +218,47 @@ So the start anchor accepts either form:
 export type DistortionAnchor = ClockTimeDescriptor | { elapsed: Duration };
 ```
 
-(This is the building block for stopwatch- and countdown-style clocks; the ergonomic facades for those are coming.)
+(This is the building block for the `Stopwatch` and `Countdown` clocks below.)
+
+## Stopwatch & Countdown
+
+`Stopwatch` and `Countdown` are thin clocks built over the run-relative (`elapsed`) anchor. Both take the same array of distortions a `Clock` does and start their run the moment you construct them.
+
+A **`Stopwatch`** counts *up* in warped time. Distortions make the elapsed reading crawl or sprint while real time ticks on normally:
+
+```
+import { Stopwatch, ConstantTimeDilation } from 'clockblocker';
+
+const stopwatch = new Stopwatch([
+  new ConstantTimeDilation({ elapsed: { minutes: 0 } }, { minutes: 15 }, { minutes: 30 }),
+]);
+
+// 30 real minutes later:
+stopwatch.elapsedInMillis          // 15 minutes — the warped reading crawled
+stopwatch.referenceElapsedInMillis // 30 minutes — real, unbent elapsed time
+```
+
+A **`Countdown`** counts *down* in warped time toward a real deadline (a duration measured from the run's start). Because the offset is cumulative — a dilation is repaid by a later compression — the countdown can crawl early and sprint late yet still land on zero exactly when the real deadline arrives:
+
+```
+import { Countdown, ConstantTimeDilation, ConstantTimeCompression } from 'clockblocker';
+
+// 45-minute deadline: crawl for the first 30 real minutes, then sprint to catch up.
+const countdown = new Countdown({ minutes: 45 }, [
+  new ConstantTimeDilation({ elapsed: { minutes: 0 } }, { minutes: 15 }, { minutes: 30 }),
+  new ConstantTimeCompression({ elapsed: { minutes: 30 } }, { minutes: 30 }, { minutes: 15 }),
+]);
+
+// 30 real minutes in, only 15 of the 45 have ticked away — it crawled:
+countdown.remainingInMillis // 30 minutes
+countdown.isComplete        // false
+
+// ...and at the real 45-minute mark it lands on zero, having sprinted the rest:
+countdown.remainingInMillis // 0  (rests at zero, never negative)
+countdown.isComplete        // true
+```
+
+Both expose a `clock` accessor onto the underlying `Clock` (for `relativeTimeInMillis` / `referenceTimeInMillis`) if you need it.
 
 ## Contributing
 
