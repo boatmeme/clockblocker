@@ -1,6 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import ClockTime, { ClockTimeDescriptor } from './ClockTime';
 import TimeWindow from './TimeWindow';
+import ElapsedWindow from './ElapsedWindow';
+import { DistortionWindow } from './DistortionWindow';
 
 export interface Duration {
   hours?: number;
@@ -8,34 +10,38 @@ export interface Duration {
   seconds?: number;
   milliseconds?: number;
 }
+
+// Where a distortion is anchored. A bare ClockTimeDescriptor means a wall-clock time-of-day
+// (the original, default behavior); `{ elapsed }` anchors the window to the run's own t=0,
+// measured in reference (real) time since the Clock was constructed.
+export type DistortionAnchor = ClockTimeDescriptor | { elapsed: Duration };
+
+const durationToMillis = (duration: Duration) =>
+  Temporal.Duration.from(duration).round({ largestUnit: 'millisecond' }).milliseconds;
+
+const isElapsedAnchor = (anchor: DistortionAnchor): anchor is { elapsed: Duration } => `elapsed` in anchor;
+
 export default abstract class RelativeTimeDistortion {
-  protected timeWindow: TimeWindow;
-  protected startClockTime: ClockTime;
+  protected timeWindow: DistortionWindow;
   protected relativeDurationInMillis: number;
   protected referenceDurationInMillis: number;
-  constructor(
-    referenceStartClockTime: ClockTimeDescriptor,
-    relativeDuration: Duration,
-    referenceDuration: Duration = relativeDuration,
-  ) {
-    this.startClockTime = new ClockTime(referenceStartClockTime);
-    this.timeWindow = new TimeWindow(this.startClockTime, this.startClockTime.add(referenceDuration));
-    this.relativeDurationInMillis = Temporal.Duration.from(relativeDuration).round({
-      largestUnit: 'millisecond',
-    }).milliseconds;
-    this.referenceDurationInMillis = Temporal.Duration.from(referenceDuration).round({
-      largestUnit: 'millisecond',
-    }).milliseconds;
+  constructor(anchor: DistortionAnchor, relativeDuration: Duration, referenceDuration: Duration = relativeDuration) {
+    this.relativeDurationInMillis = durationToMillis(relativeDuration);
+    this.referenceDurationInMillis = durationToMillis(referenceDuration);
+    if (isElapsedAnchor(anchor)) {
+      const startOffset = durationToMillis(anchor.elapsed);
+      this.timeWindow = new ElapsedWindow(startOffset, startOffset + this.referenceDurationInMillis);
+    } else {
+      const start = new ClockTime(anchor);
+      this.timeWindow = new TimeWindow(start, start.add(referenceDuration));
+    }
   }
 
   getTimeWindow() {
     return this.timeWindow.clone();
   }
 
-  getElapsedTimeInMillis(
-    offset = 0,
-    length: number = this.timeWindow.windowEndInMillis - this.timeWindow.windowStartInMillis,
-  ) {
+  getElapsedTimeInMillis(offset = 0, length: number = this.referenceDurationInMillis) {
     return this.distortTime(length, offset);
   }
 
