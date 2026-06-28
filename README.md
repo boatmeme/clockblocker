@@ -141,16 +141,19 @@ A few things worth knowing about *when* your distortions actually fire:
   back. Polling matters not: read the clock once or a thousand times, eagerly or after idling for
   days — each window is integrated exactly once.
 
-## Roadmap (as of August 2022)
+## Roadmap
 
-There are plenty of improvements I can imagine implementing, but I need some time living with the API as it currently exists before going further. This is my top-o-the-head, tip-o-the-tongue wishlist:
+The core anchor system is in place: a distortion can be pinned to a wall-clock **time-of-day**, to **elapsed** time since the run started (the basis for `Stopwatch` and `Countdown`), or to an **absolute** calendar instant (including multi-day spans) — all timezone-aware, and correct across midnight and sparse polling.
 
-1. Right now, when scheduling multiple time distortions, the API requires you to know the start and reference (real-time) end times if you would like to ensure non-overlapping distortion windows. This begs for a way to "chain" `RelativeTimeDistortion` instances, or perhaps pass another distortion into the constructor, and derive the next start-time from the end of the earlier one. 
-2. We might want an abstraction for performing validation of the parameters in the `RelativeTimeDistortion` constructors. For example, it doesn't make a ton of sense to allow `relativeDuration` params to be smaller than `referenceDuration` params for the `ConstantTimeDilation`. Maybe there's some further refactoring that could avoid that, but I don't have any ideas on what that might look like. My intuition is that we wouldn't want to implicitly *disallow* overlapping if validation fails.
-3. I want something *smoother* than the `ConstantTime*` distortions. Let's get this shit rubber-banding across Gaussian roll-offs (hoping to have a PR for that soon). Sky is the limit, though, on extending `RelativeTimeDistortion` to implement some crazy behaviors. And to that end...
-4. Might need to rethink the extend `RelativeTimeDistortion` abstraction. Not yet sure whether we want to build further onto extending the class hierarchy and change that `distortTime` interface to an anonymous function that is passed-into the `RelativeTimeDistortion` instance? Maybe the function should take an `ratio` instead of direct access to protected attributes. I'm not sure yet, but I'm open to refactoring how that might work.
-5. I have a vague intuition that there are further levels of abstraction to be mined in building specific, pre-defined combinations of distortions, but I see that as further out on the roadmap. 
-6. A case could probably be made for providing an interface for manipulating the distortions of an existing `Clock` instance, but right now, since the `referenceTime` is always based off of the underlying process' `Date.now()`, I'm content to just create new instances of `Clock`.
+From here, roughly in priority order:
+
+1. **Eased, non-constant distortions.** Everything today is piecewise-*linear* (`ConstantTime*`), so the rate snaps at every window boundary — the exact tell we're trying to hide. I want smooth ease-in/ease-out and Gaussian roll-offs rubber-banding across the window. This probably also means revisiting the `distortTime` extension point — maybe a rate function passed *into* the distortion (taking a ratio) instead of subclassing and reaching into protected fields.
+2. **`daily` recurrence for time-of-day windows.** The `'none' | 'daily'` seam already lives on `TimeWindow`; only one-shot is wired up. Daily would fire a window "every night," summing each occurrence into the cumulative offset.
+3. **Changing a running `Clock`'s timezone.** The zone is immutable today — to move zones you build a new `Clock`. A seeded-successor `Clock` (injectable run-anchor + offset) could carry the in-flight fake time and distortions into a new zone, pending a policy for how time-of-day windows refire when local time jumps.
+4. **Calendar-aware durations.** `Duration` is exact milliseconds, so "3 days" is `{ hours: 72 }` and won't track DST. Optional `days`/`weeks` units resolved through Temporal would anchor spans to wall-clock dates.
+5. **Parameter validation.** Opt-in sanity checks (a dilation that's secretly a compression, negative elapsed offsets, malformed absolute descriptors) — without implicitly *disallowing* overlapping windows.
+6. **Chaining distortions.** Derive one window's start from the previous one's end, so non-overlapping schedules don't require hand-computing every boundary.
+7. **Pre-defined recipes & live `Clock` mutation.** Higher-level, pre-built combinations of distortions, and possibly an interface to adjust an existing `Clock`'s distortions in place — though for now, since `referenceTime` is just `Date.now()`, the idiom is happily to spin up a new `Clock`.
 
 ## API
 
