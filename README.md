@@ -147,7 +147,7 @@ The core anchor system is in place: a distortion can be pinned to a wall-clock *
 
 From here, roughly in priority order:
 
-1. **Eased, non-constant distortions.** Everything today is piecewise-*linear* (`ConstantTime*`), so the rate snaps at every window boundary — the exact tell we're trying to hide. I want smooth ease-in/ease-out and Gaussian roll-offs rubber-banding across the window. This probably also means revisiting the `distortTime` extension point — maybe a rate function passed *into* the distortion (taking a ratio) instead of subclassing and reaching into protected fields.
+1. **More eased distortion curves.** The first eased family has landed: `EasedTime{Dilation,Compression}` ride a raised-cosine *bump*, so the rate eases up from normal speed, peaks mid-window, and eases back out — no snap at the seams (the tell we're trying to hide). Still open: a Gaussian roll-off (needs an `erf` approximation), and revisiting the extension point — a rate function passed *into* the distortion (taking a ratio) instead of subclassing — so custom curves don't have to reach into protected fields. Any new curve just supplies its normalized cumulative on `EasedTimeDistortion` today.
 2. **`daily` recurrence for time-of-day windows.** The `'none' | 'daily'` seam already lives on `TimeWindow`; only one-shot is wired up. Daily would fire a window "every night," summing each occurrence into the cumulative offset.
 3. **Changing a running `Clock`'s timezone.** The zone is immutable today — to move zones you build a new `Clock`. A seeded-successor `Clock` (injectable run-anchor + offset) could carry the in-flight fake time and distortions into a new zone, pending a policy for how time-of-day windows refire when local time jumps.
 4. **Calendar-aware durations.** `Duration` is exact milliseconds, so "3 days" is `{ hours: 72 }` and won't track DST. Optional `days`/`weeks` units resolved through Temporal would anchor spans to wall-clock dates.
@@ -259,6 +259,35 @@ const clock = new Clock(distortions, { timeZone: 'America/Denver' });
 ```
 
 The timezone is fixed for the life of the clock; to run in a different zone, construct a new `Clock`. (Run-relative `{ elapsed }` windows ignore the zone, and an `{ absolute }` start given as a `Date` is already an instant, so it ignores it too.)
+
+### Eased (smooth) distortions
+
+`ConstantTime*` applies a flat rate across its whole window, which means the clock's speed *snaps* the instant a window opens, closes, or hands off to the next one — under casual observation, those kinks are the giveaway. `EasedTime{Dilation,Compression}` are drop-in replacements that take the **same three arguments** but spread the same total gain/loss across the window on a raised-cosine curve: the rate eases in from normal speed, reaches its peak at the midpoint, and eases back out, so there's no detectable seam.
+
+```
+import { Clock, EasedTimeDilation, EasedTimeCompression } from 'clockblocker';
+
+const clock = new Clock([
+  // Same contract as ConstantTimeDilation: lose 3h of fake time over 6h of real time...
+  new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }),
+  // ...then claw it back. By 10am the clock is exactly in sync again, just as before.
+  new EasedTimeCompression({ hour: 7 }, { hours: 6 }, { hours: 3 }),
+]);
+```
+
+The whole-window contract is identical to the constant case — over `referenceDuration` of real time the fake clock still advances exactly `relativeDuration`, so composed windows net out the same way and a constant clock can be swapped for an eased one without recomputing any boundaries. Only the *distribution* of the slowdown across the window changes. (Because a single bump preserves the window's average rate while easing to normal speed at both ends, the peak deviation is twice the average — e.g. the half-speed example above momentarily reaches a full pause at the midpoint.)
+
+To ship a different shape, subclass `EasedTimeDistortion` and override `cumulativeFraction(u)` — the fraction of the window's total offset delta accrued by reference-fraction `u` in `[0, 1]` (it must run `0 → 1`). The base class integrates it over each polled slice, so polling frequency never affects the result:
+
+```
+import { EasedTimeDistortion } from 'clockblocker';
+
+class SmoothstepDistortion extends EasedTimeDistortion {
+  protected cumulativeFraction(u: number): number {
+    return u * u * (3 - 2 * u); // classic smoothstep S-curve
+  }
+}
+```
 
 ## Stopwatch & Countdown
 
