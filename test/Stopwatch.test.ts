@@ -25,6 +25,8 @@ describe(`Stopwatch`, () => {
     jest.setSystemTime(start + 10 * minute);
     expect(stopwatch.elapsedInMillis).toEqual(10 * minute);
     expect(stopwatch.referenceElapsedInMillis).toEqual(10 * minute);
+    // The underlying Clock is reachable for absolute warped/real readings.
+    expect(stopwatch.clock.relativeTimeInMillis).toEqual(start + 10 * minute);
   });
 
   it(`crawls while an elapsed dilation window is active`, () => {

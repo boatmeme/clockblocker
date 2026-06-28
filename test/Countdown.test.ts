@@ -24,6 +24,8 @@ describe(`Countdown`, () => {
 
   it(`counts down in real time when undistorted`, () => {
     const countdown = buildAt(start, { minutes: 10 });
+    expect(countdown.targetInMillis).toEqual(10 * minute);
+    expect(countdown.clock.referenceTimeInMillis).toEqual(start);
     expect(countdown.remainingInMillis).toEqual(10 * minute);
     expect(countdown.isComplete).toBe(false);
 
