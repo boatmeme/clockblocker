@@ -123,6 +123,24 @@ clock.referenceTimeInMillis // returns epochMillis for 10:00am
 clock.relativeTimeInMillis // returns epochMillis for 11:00am
 clock.referenceTimeInMillis // returns epochMillis for 11:00am
 ```
+## How windows are scheduled
+
+A few things worth knowing about *when* your distortions actually fire:
+
+- **Windows are anchored when the `Clock` is constructed.** Each distortion's window resolves
+  *once* — to its current-or-next occurrence as of the moment you call `new Clock(...)` — and
+  stays pinned there for the life of that clock. So build the `Clock` at (or before) the window
+  you intend to bend. If a window has already fully passed at construction time, it resolves to
+  its *next* occurrence instead.
+- **Windows are one-shot.** A window distorts a single occurrence, not "every night" — which is
+  fine, because you'll only get away with this once a year on Christmas morning anyway. Want the
+  next occurrence? Spin up a new `Clock`.
+- **Overnight windows work.** A window whose end-of-day is earlier than its start (e.g.
+  `{ hour: 23 }` → `03:00`) spans midnight and keeps distorting straight across the date boundary.
+- **The offset is cumulative.** Time lost to a dilation persists until a later compression pays it
+  back. Polling matters not: read the clock once or a thousand times, eagerly or after idling for
+  days — each window is integrated exactly once.
+
 ## Roadmap (as of August 2022)
 
 There are plenty of improvements I can imagine implementing, but I need some time living with the API as it currently exists before going further. This is my top-o-the-head, tip-o-the-tongue wishlist:

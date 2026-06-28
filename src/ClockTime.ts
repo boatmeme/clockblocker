@@ -37,6 +37,12 @@ export default class ClockTime {
     return this.forPlainDateInMillis(date, ianaTimeZoneId);
   }
 
+  // Resolve this wall-clock time on an arbitrary calendar date (not just today/tomorrow),
+  // so an anchored window can search occurrences across neighbouring days.
+  forDateInMillis(date: Temporal.PlainDate, ianaTimeZoneId = `UTC`) {
+    return this.forPlainDateInMillis(date, ianaTimeZoneId);
+  }
+
   add(duration: Temporal.DurationLike) {
     return new ClockTime(this._clockTime.add(duration));
   }
