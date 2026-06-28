@@ -264,6 +264,8 @@ The timezone is fixed for the life of the clock; to run in a different zone, con
 
 `ConstantTime*` applies a flat rate across its whole window, which means the clock's speed *snaps* the instant a window opens, closes, or hands off to the next one — under casual observation, those kinks are the giveaway. `EasedTime{Dilation,Compression}` are drop-in replacements that take the **same three arguments** (plus an optional fourth to shape the easing) and spread the same total gain/loss across the window smoothly. By default the rate eases in from normal speed on a raised-cosine curve, peaks at the midpoint, and eases back out, so there's no detectable seam.
 
+![Fake-clock speed across a window: a constant distortion snaps from 1× to ½× at both seams, while the eased bump dips smoothly to a momentary pause at the midpoint and the eased plateau holds a gentle, sustained rate](docs/img/eased-rate.png)
+
 ```
 import { Clock, EasedTimeDilation, EasedTimeCompression } from 'clockblocker';
 
@@ -276,6 +278,8 @@ const clock = new Clock([
 ```
 
 The whole-window contract is identical to the constant case — over `referenceDuration` of real time the fake clock still advances exactly `relativeDuration`, so composed windows net out the same way and a constant clock can be swapped for an eased one without recomputing any boundaries. Only the *distribution* of the slowdown across the window changes.
+
+![Fake-clock lag across the example night: both the constant and eased clocks fall exactly 3h behind by 7am and return to zero by 10am, but the constant path has sharp corners while the eased path has flat tangents at every seam](docs/img/eased-lag.png)
 
 #### Shaping the ramp
 
