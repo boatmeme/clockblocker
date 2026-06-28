@@ -57,38 +57,53 @@ describe(`Clock class`, () => {
       expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis + offset);
     });
   });
-  // KNOWN LIMITATION: a distortion's window is described purely as a wall-clock time-of-day
-  // and is always resolved against the *current* calendar date (ClockTime.forTodayInMillis).
-  // A window that wraps past midnight (end-of-day < start-of-day) is therefore only active on
-  // the calendar day it starts; once the date rolls over, its start time is recomputed as
-  // tonight's occurrence (in the future) and the in-progress distortion silently drops out.
-  // These tests pin that behavior so the gap is visible and a future date/timezone-aware
-  // implementation has a regression target. The midnight scenario is exactly the README's
-  // overnight use case, so this matters in practice.
-  describe(`midnight-wrapping window (known limitation)`, () => {
+  // A window is now pinned once, at clock construction, to a single fixed [start, end)
+  // occurrence (one-shot semantics) instead of being re-resolved to the *current* calendar
+  // date on every read. A window that wraps past midnight (end-of-day < start-of-day) is
+  // therefore active continuously across the midnight boundary, rather than silently
+  // dropping its in-progress distortion once the date rolls over. This is exactly the
+  // README's overnight use case. These were previously pinned as a known limitation; they
+  // now assert the fixed behavior.
+  describe(`midnight-wrapping window (resolves continuously across midnight)`, () => {
     const hour = 1000 * 60 * 60;
     const minute = 1000 * 60;
     // 11pm start, runs at half speed for a 4h reference window => ends 3am the next day.
-    const buildClock = () => new Clock([new ConstantTimeDilation({ hour: 23 }, { hours: 2 }, { hours: 4 })]);
+    // Constructing the clock at 10pm pins the one-shot window to tonight's 23:00->03:00.
+    const buildClockAt = (constructMs: number) => {
+      jest.setSystemTime(constructMs);
+      return new Clock([new ConstantTimeDilation({ hour: 23 }, { hours: 2 }, { hours: 4 })]);
+    };
 
-    it('distorts correctly before midnight, on the day the window starts', () => {
-      const clock = buildClock();
-      jest.setSystemTime(23 * hour); // 11:00pm, window start
-      clock.relativeTimeInMillis; // prime lastCheck at the window start
-
+    it('distorts before midnight, on the evening the window starts', () => {
+      const clock = buildClockAt(22 * hour); // 10:00pm, before the window
       jest.setSystemTime(23 * hour + 30 * minute); // 11:30pm, 30 real minutes into the window
       // Half speed => only 15 fake minutes have passed; the clock is 15 minutes behind.
       expect(clock.relativeTimeInMillis - clock.referenceTimeInMillis).toEqual(-15 * minute);
     });
 
-    it('does NOT distort after midnight, even though 00:30 is inside the 23:00->03:00 window', () => {
-      jest.setSystemTime(24 * hour + 30 * minute); // 12:30am the following day
-      const clock = buildClock();
+    it('keeps distorting AFTER midnight (the old cross-midnight drop-out, now fixed)', () => {
+      const clock = buildClockAt(22 * hour); // 10:00pm, before the window
+      jest.setSystemTime(24 * hour + 30 * minute); // 12:30am, 90 real minutes into the window
+      // 23:00 -> 00:30 is 90 real minutes at half speed => 45 fake minutes => 45 min behind.
+      // Pre-fix this read fell outside the re-anchored "today" window and lost nothing.
+      expect(clock.relativeTimeInMillis - clock.referenceTimeInMillis).toEqual(-45 * minute);
+    });
+  });
 
-      // The window *should* still be active here, but because its start is re-resolved to the
-      // current (already-past-midnight) date, it is treated as not-yet-started and no
-      // distortion is applied. Documents the bug rather than endorsing it.
-      expect(clock.relativeTimeInMillis).toEqual(clock.referenceTimeInMillis);
+  // The window must be integrated even if the clock is polled sparsely: read once before it,
+  // idle straight through it (and past midnight), then read once after. Pre-fix the window
+  // re-resolved to the read-time "today" -- sitting in the future when read days later -- so
+  // the whole excursion was skipped and nothing was lost.
+  describe(`sparse reads across a fully-elapsed window`, () => {
+    const hour = 1000 * 60 * 60;
+
+    it('integrates the window exactly once even when idle for days between reads', () => {
+      const clock = new Clock([new ConstantTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 })]); // built at midnight
+      clock.relativeTimeInMillis; // prime lastCheck before the 1am-7am window
+
+      jest.setSystemTime(3 * 24 * hour); // idle three days, well past the window
+      // The half-speed window loses exactly 3h, once -- not zero, and not three times.
+      expect(clock.relativeTimeInMillis - clock.referenceTimeInMillis).toEqual(-3 * hour);
     });
   });
   describe(`getRelativeTime`, () => {
