@@ -212,13 +212,50 @@ const clock = new Clock([
 ]);
 ```
 
-So the start anchor accepts either form:
-
-```
-export type DistortionAnchor = ClockTimeDescriptor | { elapsed: Duration };
-```
-
 (This is the building block for the `Stopwatch` and `Countdown` clocks below.)
+
+### Anchoring a distortion to a fixed calendar instant
+
+Pass `{ absolute }` to pin a distortion to a specific real-world moment, independent of when the `Clock` was constructed. Because it is plain instant arithmetic, the span can be as long as you like — true multi-day distortions, with none of the ~24h limit a time-of-day window has:
+
+```
+import { Clock, ConstantTimeDilation } from 'clockblocker';
+
+// Dilate continuously for 3 real days starting at a fixed instant.
+const clock = new Clock([
+  new ConstantTimeDilation(
+    { absolute: new Date('2026-12-25T00:00:00Z') }, // a fully-specified moment
+    { hours: 36 }, // 36 hours of "fake" time appear to pass...
+    { hours: 72 }, // ...over 72 real hours
+  ),
+]);
+```
+
+The start can be a JS `Date` (an instant) or a wall-clock descriptor resolved against the clock's timezone (see below):
+
+```
+{ absolute: { year: 2026, month: 12, day: 25, hour: 1 } } // 1:00am, in the clock's zone
+```
+
+So the start anchor accepts any of these forms:
+
+```
+export type DistortionAnchor =
+  | ClockTimeDescriptor              // a wall-clock time-of-day (default)
+  | { elapsed: Duration }            // relative to the run's t=0
+  | { absolute: Date | AbsoluteDescriptor }; // a fixed real-world instant
+```
+
+### Timezone
+
+A `Clock` resolves its wall-clock windows — both time-of-day and `absolute` descriptors — against a timezone you pass as a second argument (default `'UTC'`):
+
+```
+// "1:00am–7:00am" now means 1am–7am in Denver, DST and all.
+const clock = new Clock(distortions, { timeZone: 'America/Denver' });
+```
+
+The timezone is fixed for the life of the clock; to run in a different zone, construct a new `Clock`. (Run-relative `{ elapsed }` windows ignore the zone, and an `{ absolute }` start given as a `Date` is already an instant, so it ignores it too.)
 
 ## Stopwatch & Countdown
 

@@ -1,6 +1,7 @@
 import RelativeTimeDistortion from '../src/RelativeTimeDistortion';
 import TimeWindow from '../src/TimeWindow';
 import ElapsedWindow from '../src/ElapsedWindow';
+import AbsoluteWindow from '../src/AbsoluteWindow';
 
 describe(`RelativeTimeDistortion class`, () => {
   const start = {
@@ -54,6 +55,19 @@ describe(`RelativeTimeDistortion class`, () => {
       expect(window).toBeInstanceOf(ElapsedWindow);
       // Spans [elapsed, elapsed + referenceDuration) = [5min, 25min) relative to the run anchor.
       expect(window.resolveAt(0)).toEqual({ startMs: 5 * minute, endMs: 25 * minute });
+    });
+
+    it(`builds an absolute window from an { absolute } anchor`, () => {
+      const timewarp = new ConcreteRelativeTimeDistortion(
+        { absolute: new Date(`2026-12-25T01:00:00Z`) },
+        { hours: 3 },
+        { hours: 6 },
+      );
+      const window = timewarp.getTimeWindow();
+
+      expect(window).toBeInstanceOf(AbsoluteWindow);
+      // Spans [start, start + referenceDuration) = [01:00Z, 07:00Z), independent of the anchor.
+      expect(window.resolveAt(0)).toEqual({ startMs: Date.UTC(2026, 11, 25, 1), endMs: Date.UTC(2026, 11, 25, 7) });
     });
   });
 });

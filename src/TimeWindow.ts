@@ -49,19 +49,20 @@ export default class TimeWindow implements DistortionWindow {
   // upcoming one. For a midnight-wrapping window the containing occurrence may have started
   // on the prior calendar day (e.g. at 00:30 you are inside last night's 23:00->03:00 span),
   // so candidates span the day before and after the anchor's date, not just the anchor's day.
-  resolveAt(anchorMs: number): ResolvedWindow {
+  resolveAt(anchorMs: number, timeZone?: string): ResolvedWindow {
+    // The Clock supplies its frame of reference; fall back to the window's own zone for
+    // standalone use. The construction zone stays the default so legacy getters are unaffected.
+    const tz = timeZone ?? this._timeZone;
     const wraps = this.wrapsMidnight;
-    const anchorDate = Temporal.Instant.fromEpochMilliseconds(anchorMs)
-      .toZonedDateTimeISO(this._timeZone)
-      .toPlainDate();
+    const anchorDate = Temporal.Instant.fromEpochMilliseconds(anchorMs).toZonedDateTimeISO(tz).toPlainDate();
 
     const occurrences = [-1, 0, 1]
       .map((dayDelta) => {
         const startDate = anchorDate.add({ days: dayDelta });
         const endDate = wraps ? startDate.add({ days: 1 }) : startDate;
         return {
-          startMs: this.start.forDateInMillis(startDate, this._timeZone),
-          endMs: this.end.forDateInMillis(endDate, this._timeZone),
+          startMs: this.start.forDateInMillis(startDate, tz),
+          endMs: this.end.forDateInMillis(endDate, tz),
         };
       })
       .sort((a, b) => a.startMs - b.startMs);

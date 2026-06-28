@@ -91,4 +91,21 @@ describe(`TimeWindow class`, () => {
       expect(window.compareWithinWindow(windowEnd)).toEqual(TimeWindowComparison.LATER);
     });
   });
+
+  // resolveAt takes the Clock's zone as an argument, falling back to the window's own
+  // construction zone when none is supplied (standalone use).
+  describe(`resolveAt timezone`, () => {
+    const window = new TimeWindow(new ClockTime({ hour: 1 }), new ClockTime({ hour: 2 }), `America/New_York`);
+    const anchor = Date.UTC(2026, 5, 1, 12); // 2026-06-01 noon UTC (EDT, UTC-4)
+
+    it(`falls back to the construction zone when no zone is passed`, () => {
+      // Next 1am EDT after the anchor is 2026-06-02 05:00Z.
+      expect(window.resolveAt(anchor).startMs).toEqual(Date.UTC(2026, 5, 2, 5));
+    });
+
+    it(`uses the supplied zone, overriding the construction zone`, () => {
+      // Next 1am UTC after the anchor is 2026-06-02 01:00Z.
+      expect(window.resolveAt(anchor, `UTC`).startMs).toEqual(Date.UTC(2026, 5, 2, 1));
+    });
+  });
 });
