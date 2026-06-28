@@ -1,7 +1,7 @@
 import Clock from './Clock';
 import ConstantTimeDilation from './ConstantTimeDilation';
 import ConstantTimeCompression from './ConstantTimeCompression';
-import EasedTimeDistortion from './EasedTimeDistortion';
+import EasedTimeDistortion, { EasedDistortionOptions, RampSpec } from './EasedTimeDistortion';
 import EasedTimeDilation from './EasedTimeDilation';
 import EasedTimeCompression from './EasedTimeCompression';
 import Stopwatch from './Stopwatch';
@@ -20,4 +20,4 @@ export {
   Stopwatch,
   Countdown,
 };
-export type { DistortionAnchor, AbsoluteDescriptor, Duration };
+export type { DistortionAnchor, AbsoluteDescriptor, Duration, EasedDistortionOptions, RampSpec };

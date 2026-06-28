@@ -147,7 +147,7 @@ The core anchor system is in place: a distortion can be pinned to a wall-clock *
 
 From here, roughly in priority order:
 
-1. **More eased distortion curves.** The first eased family has landed: `EasedTime{Dilation,Compression}` ride a raised-cosine *bump*, so the rate eases up from normal speed, peaks mid-window, and eases back out — no snap at the seams (the tell we're trying to hide). Still open: a Gaussian roll-off (needs an `erf` approximation), and revisiting the extension point — a rate function passed *into* the distortion (taking a ratio) instead of subclassing — so custom curves don't have to reach into protected fields. Any new curve just supplies its normalized cumulative on `EasedTimeDistortion` today.
+1. **More eased distortion curves.** The eased family has landed: `EasedTime{Dilation,Compression}` smoothly vary their rate so there's no snap at the seams (the tell we're trying to hide). Their default is a raised-cosine *bump*; a per-side `{ ramp, rampIn, rampOut }` opens a flat plateau for a sustained, gentle (and optionally asymmetric) slow. Gaussian roll-offs were considered and dropped — a Gaussian bump is the same single-hump character as the cosine but costs an `erf` approximation, and the plateau already fills the genuinely different "sustained gentle" need. Still open: revisiting the extension point — a rate function passed *into* the distortion (taking a ratio) instead of subclassing — so custom curves don't have to reach into protected fields. Any new curve just supplies its normalized cumulative on `EasedTimeDistortion` today.
 2. **`daily` recurrence for time-of-day windows.** The `'none' | 'daily'` seam already lives on `TimeWindow`; only one-shot is wired up. Daily would fire a window "every night," summing each occurrence into the cumulative offset.
 3. **Changing a running `Clock`'s timezone.** The zone is immutable today — to move zones you build a new `Clock`. A seeded-successor `Clock` (injectable run-anchor + offset) could carry the in-flight fake time and distortions into a new zone, pending a policy for how time-of-day windows refire when local time jumps.
 4. **Calendar-aware durations.** `Duration` is exact milliseconds, so "3 days" is `{ hours: 72 }` and won't track DST. Optional `days`/`weeks` units resolved through Temporal would anchor spans to wall-clock dates.
@@ -262,7 +262,7 @@ The timezone is fixed for the life of the clock; to run in a different zone, con
 
 ### Eased (smooth) distortions
 
-`ConstantTime*` applies a flat rate across its whole window, which means the clock's speed *snaps* the instant a window opens, closes, or hands off to the next one — under casual observation, those kinks are the giveaway. `EasedTime{Dilation,Compression}` are drop-in replacements that take the **same three arguments** but spread the same total gain/loss across the window on a raised-cosine curve: the rate eases in from normal speed, reaches its peak at the midpoint, and eases back out, so there's no detectable seam.
+`ConstantTime*` applies a flat rate across its whole window, which means the clock's speed *snaps* the instant a window opens, closes, or hands off to the next one — under casual observation, those kinks are the giveaway. `EasedTime{Dilation,Compression}` are drop-in replacements that take the **same three arguments** (plus an optional fourth to shape the easing) and spread the same total gain/loss across the window smoothly. By default the rate eases in from normal speed on a raised-cosine curve, peaks at the midpoint, and eases back out, so there's no detectable seam.
 
 ```
 import { Clock, EasedTimeDilation, EasedTimeCompression } from 'clockblocker';
@@ -275,9 +275,37 @@ const clock = new Clock([
 ]);
 ```
 
-The whole-window contract is identical to the constant case — over `referenceDuration` of real time the fake clock still advances exactly `relativeDuration`, so composed windows net out the same way and a constant clock can be swapped for an eased one without recomputing any boundaries. Only the *distribution* of the slowdown across the window changes. (Because a single bump preserves the window's average rate while easing to normal speed at both ends, the peak deviation is twice the average — e.g. the half-speed example above momentarily reaches a full pause at the midpoint.)
+The whole-window contract is identical to the constant case — over `referenceDuration` of real time the fake clock still advances exactly `relativeDuration`, so composed windows net out the same way and a constant clock can be swapped for an eased one without recomputing any boundaries. Only the *distribution* of the slowdown across the window changes.
 
-To ship a different shape, subclass `EasedTimeDistortion` and override `cumulativeFraction(u)` — the fraction of the window's total offset delta accrued by reference-fraction `u` in `[0, 1]` (it must run `0 → 1`). The base class integrates it over each polled slice, so polling frequency never affects the result:
+#### Shaping the ramp
+
+The default bump preserves the window's average rate while easing to normal speed at both ends, so the peak deviation is twice the average — the half-speed example above momentarily reaches a full *pause* at the midpoint. To slow more *gently* and *sustainedly* instead, narrow the ease regions with an optional fourth argument so a flat plateau opens up in the middle:
+
+```
+// Ease in/out over the outer 10% of the window each; hold a gentle, steady rate across
+// the middle 80%. Same 3h loss over 6h -- just spread far more evenly.
+new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }, { ramp: 0.1 });
+```
+
+`ramp` is the width of *each* ease region. It accepts either a **fraction** of the window (a number in `[0, 1]`, handy when it's driven by a normalized control like a slider) or a **`Duration`** of real time (consistent with the rest of the API, and the natural unit for imperceptibility, which is an absolute-time effect):
+
+```
+new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }, { ramp: { minutes: 36 } });
+```
+
+The two ends are independent. `rampIn` / `rampOut` override a single side and win over the symmetric `ramp` shorthand; each side defaults to `ramp` (or `0.5`) when unset. A side of `0` is a hard, constant-rate seam.
+
+```
+// Long gentle onset, quick roll-off.
+new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }, { rampIn: 0.3, rampOut: 0.05 });
+
+// Ease in, then stop dead at the boundary.
+new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }, { rampIn: 0.2, rampOut: 0 });
+```
+
+The endpoints are limiting cases of `ramp`: `0.5` (the default) is the raised-cosine bump, and `0` collapses to the hard-seam `ConstantTime*` behavior. Overlapping ramps (widths summing past the window) are scaled down proportionally rather than rejected.
+
+To ship an entirely different shape, subclass `EasedTimeDistortion` and override `cumulativeFraction(u)` — the fraction of the window's total offset delta accrued by reference-fraction `u` in `[0, 1]` (it must run `0 → 1`). The base class integrates it over each polled slice, so polling frequency never affects the result:
 
 ```
 import { EasedTimeDistortion } from 'clockblocker';

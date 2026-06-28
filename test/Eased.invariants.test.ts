@@ -70,6 +70,31 @@ describe(`Eased clock invariants`, () => {
     });
   });
 
+  describe(`plateau (non-default ramp)`, () => {
+    // Same README excursion, but each window eases over a narrow 15% ramp and holds a gentle,
+    // sustained rate across its plateau instead of peaking at the midpoint.
+    const buildPlateau = () => [
+      new EasedTimeDilation({ hour: 1 }, { hours: 3 }, { hours: 6 }, { ramp: 0.15 }),
+      new EasedTimeCompression({ hour: 7 }, { hours: 6 }, { hours: 3 }, { ramp: 0.15 }),
+    ];
+
+    it(`stays polling-frequency independent and still nets to zero`, () => {
+      const coarse = new Clock(buildPlateau());
+      jest.setSystemTime(12 * hour);
+      const coarseResult = coarse.relativeTimeInMillis;
+
+      const fine = new Clock(buildPlateau());
+      let fineResult = 0;
+      for (let t = 0; t <= 12 * hour; t += 60 * 1000) {
+        jest.setSystemTime(t);
+        fineResult = fine.relativeTimeInMillis;
+      }
+
+      expect(fineResult).toBeCloseTo(coarseResult, 6);
+      expect(fineResult).toBeCloseTo(12 * hour, 6); // the windows still cancel by noon
+    });
+  });
+
   describe(`no rate kink at the seams`, () => {
     // Measures the offset change accrued over a one-minute poll straddling an instant -- a proxy
     // for the instantaneous rate there.
