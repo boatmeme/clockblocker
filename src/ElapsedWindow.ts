@@ -7,6 +7,7 @@ import { DistortionWindow, ResolvedWindow } from './DistortionWindow';
 export default class ElapsedWindow implements DistortionWindow {
   constructor(private startOffsetMs: number, private endOffsetMs: number) {}
 
+  // Run-relative: ignores the timezone entirely (the offsets are real time since the run start).
   resolveAt(anchorMs: number): ResolvedWindow {
     return { startMs: anchorMs + this.startOffsetMs, endMs: anchorMs + this.endOffsetMs };
   }

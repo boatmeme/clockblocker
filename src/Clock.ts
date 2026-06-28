@@ -7,15 +7,23 @@ export default class Clock {
   // once at construction. Windows no longer re-resolve to "today" on each read, which is
   // what made overnight (cross-midnight) and sparsely-polled clocks drop their distortions.
   private _runAnchor: number;
+  // The clock's frame of reference, used to resolve wall-clock windows (time-of-day, absolute)
+  // to instants. Read-only: to run in a different zone, construct a new Clock.
+  private _timeZone: string;
   private _timeDistortions: Array<RelativeTimeDistortion>;
-  constructor(timeDistortions: Array<RelativeTimeDistortion> = []) {
+  constructor(timeDistortions: Array<RelativeTimeDistortion> = [], options: { timeZone?: string } = {}) {
     this._lastCheck = this.referenceTimeInMillis;
     this._runAnchor = this._lastCheck;
     this._timeDistortions = timeDistortions;
+    this._timeZone = options.timeZone ?? `UTC`;
   }
 
   get referenceTimeInMillis() {
     return Date.now();
+  }
+
+  get timeZone() {
+    return this._timeZone;
   }
 
   // The run's t=0: the reference instant the clock was constructed at, which every elapsed
@@ -27,7 +35,7 @@ export default class Clock {
   get offset() {
     const now = this.referenceTimeInMillis;
     this._offset = this._timeDistortions.reduce((offset, distortion) => {
-      const { startMs, endMs } = distortion.getTimeWindow().resolveAt(this._runAnchor);
+      const { startMs, endMs } = distortion.getTimeWindow().resolveAt(this._runAnchor, this._timeZone);
       if (now < startMs) return offset; // window has not started yet
       if (this._lastCheck >= endMs) return offset; // window already finished before last check
       const timeSinceLastCheck = now - this._lastCheck;

@@ -8,6 +8,8 @@ export interface ResolvedWindow {
 }
 
 export interface DistortionWindow {
-  resolveAt(anchorMs: number): ResolvedWindow;
+  // `timeZone` is the Clock's frame of reference, used to resolve wall-clock inputs
+  // (time-of-day, absolute descriptors) to instants. Run-relative windows ignore it.
+  resolveAt(anchorMs: number, timeZone?: string): ResolvedWindow;
   clone(): DistortionWindow;
 }
