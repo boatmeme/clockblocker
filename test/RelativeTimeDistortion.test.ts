@@ -1,4 +1,6 @@
 import RelativeTimeDistortion from '../src/RelativeTimeDistortion';
+import TimeWindow from '../src/TimeWindow';
+import ElapsedWindow from '../src/ElapsedWindow';
 
 describe(`RelativeTimeDistortion class`, () => {
   const start = {
@@ -30,6 +32,28 @@ describe(`RelativeTimeDistortion class`, () => {
         timewarp.getElapsedTimeInMillis(500, 2000);
         expect(distortTimeMock).toHaveBeenCalledWith(2000, 500);
       });
+    });
+  });
+
+  describe(`anchor`, () => {
+    const minute = 60 * 1000;
+
+    it(`builds a time-of-day window from a bare clock-time descriptor (the default)`, () => {
+      const timewarp = new ConcreteRelativeTimeDistortion({ hour: 1 }, { hours: 1 });
+      expect(timewarp.getTimeWindow()).toBeInstanceOf(TimeWindow);
+    });
+
+    it(`builds an elapsed window from an { elapsed } anchor`, () => {
+      const timewarp = new ConcreteRelativeTimeDistortion(
+        { elapsed: { minutes: 5 } },
+        { minutes: 10 },
+        { minutes: 20 },
+      );
+      const window = timewarp.getTimeWindow();
+
+      expect(window).toBeInstanceOf(ElapsedWindow);
+      // Spans [elapsed, elapsed + referenceDuration) = [5min, 25min) relative to the run anchor.
+      expect(window.resolveAt(0)).toEqual({ startMs: 5 * minute, endMs: 25 * minute });
     });
   });
 });

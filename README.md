@@ -194,6 +194,32 @@ export interface Duration {
   milliseconds?: number;
 }
 ```
+
+### Anchoring a distortion to the run instead of a time-of-day
+
+By default `referenceStartClockTime` is a wall-clock time-of-day. You can instead anchor a distortion to the *run itself* — measured in real time elapsed since the `Clock` was constructed — by passing `{ elapsed }` in that first slot:
+
+```
+import { Clock, ConstantTimeDilation } from 'clockblocker';
+
+// Crawl at half speed for the first 30 real minutes of the run, no matter what the wall clock reads.
+const clock = new Clock([
+  new ConstantTimeDilation(
+    { elapsed: { minutes: 0 } }, // start at t=0 of the run (vs. a wall-clock time)
+    { minutes: 15 },             // 15 minutes of "fake" time appear to pass...
+    { minutes: 30 },             // ...over the first 30 real minutes
+  ),
+]);
+```
+
+So the start anchor accepts either form:
+
+```
+export type DistortionAnchor = ClockTimeDescriptor | { elapsed: Duration };
+```
+
+(This is the building block for stopwatch- and countdown-style clocks; the ergonomic facades for those are coming.)
+
 ## Contributing
 
 1. Fork repo

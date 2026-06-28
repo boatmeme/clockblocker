@@ -1,5 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import ClockTime, { ClockTimeComparison } from './ClockTime';
+import { DistortionWindow, ResolvedWindow } from './DistortionWindow';
 
 export enum TimeWindowComparison {
   EARLIER = -1,
@@ -11,12 +12,7 @@ export enum TimeWindowComparison {
 // is a deferred opt-in and is not yet implemented; the field reserves the seam.
 export type WindowRecurrence = 'none' | 'daily';
 
-export interface ResolvedWindow {
-  startMs: number;
-  endMs: number;
-}
-
-export default class TimeWindow {
+export default class TimeWindow implements DistortionWindow {
   private start: ClockTime;
   private end: ClockTime;
   private _timeZone: string;
